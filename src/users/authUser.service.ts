@@ -1,7 +1,8 @@
 import WebSocket from "ws";
-import { IAuthSocket, IUserData, IUserRegisterData } from "../types/interfacesOut";
+import { IAuthSocket, IUserData, IUserRegisterData, WinnerData } from "../types/interfacesOut";
 
 const users: IUserData[] = [];
+const winners: WinnerData[] = [];
 
 export const authenticateUser = (
   name: string, 
@@ -37,9 +38,11 @@ export const authenticateUser = (
     newUser.password = password;
     users.push(newUser);
     newUser.index = users.length - 1;
+    winners.push({ name, wins: 0});
 
     (socket as IAuthSocket).name = newUser.name;
     (socket as IAuthSocket).index = newUser.index;
+    
     return {
       name: newUser.name,
       index: newUser.index,
@@ -47,4 +50,9 @@ export const authenticateUser = (
       errorText: ''
     };
   }
+};
+
+
+export const getWinners = ():WinnerData[] => {
+  return winners;
 };

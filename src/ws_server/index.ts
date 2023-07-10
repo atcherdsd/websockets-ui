@@ -6,25 +6,22 @@ const port = 3000;
 const wsServer = new WebSocketServer({ port });
 
 wsServer.on('listening', () => {
-  console.log(`New connection established on port  ${port}!`);
+  console.log(`WebSocket server connection established on port ${port}!`);
 });
 
 wsServer.on('connection', (socket: WebSocket) => {
 
   socket.on('error', console.error);
 
-  socket.on('message', (data: WebSocket.RawData, isBinary: boolean): void => {
+  socket.on('message', (data: WebSocket.RawData): void => {
 
-    handleData(socket, data);
+    handleData(socket, data, wsServer);
 
-    wsServer.clients.forEach((client): void => {
-      if (client !== socket && client.readyState === WebSocket.OPEN) {
-        client.send(data, { binary: isBinary });
-      }
-    });
   });
 
   socket.on('close', () => {
-    console.log('Connection has been closed!');
+    console.log(
+      `Connection with player has been closed!`
+    );
   })
 });
