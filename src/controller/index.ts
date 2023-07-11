@@ -10,7 +10,7 @@ import {
 import { authenticateUser, getWinners } from "../users/authUser.service";
 import { getFormattedData, parseRawData } from "../utils";
 import { IncomingMessage } from "http";
-import { addUserToRoom, createRoom, getRoomsForUser } from "../room/room.service";
+import { addShipsToCreatedGame, addUserToRoom, createRoom, getRoomsForUser } from "../room/room.service";
 
 export const handleData = (
   socket: WebSocket, 
@@ -86,6 +86,16 @@ export const handleData = (
         );
         broadcastData(formattedAddUserResponseData, wsServer);
         console.log(`Info: Player added to room ${roomToAddUser.roomId}`);
+
+        break;
+      }
+      case Types.AddShips: {
+        const {
+          data: { indexPlayer, ships },
+        } = parsedData;
+
+        addShipsToCreatedGame(indexPlayer, ships);
+
         break;
       }
       default:

@@ -25,3 +25,13 @@ export enum AttackStatus {
   Killed = "killed",
   Shot = "shot"
 }
+
+export enum StateOfWholeShip {
+  Unharmed = 'unharmed',
+  Wounded = 'wounded',
+  Destroyed = 'destroyed',
+}
+export enum StateOfShipDeck {
+  Unharmed = 'unharmed',
+  Destroyed = 'destroyed',
+}

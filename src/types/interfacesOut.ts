@@ -1,6 +1,6 @@
 import WebSocket from "ws";
 import { Position, Ships } from "./interfacesIn";
-import { AttackStatus } from "./enums";
+import { AttackStatus, StateOfShipDeck, StateOfWholeShip } from "./enums";
 
 export interface IUserRegisterData {
   name: string;
@@ -37,7 +37,7 @@ export interface Room {
 export type UpdateRoomData = Room[]
 
 export interface IStartGameData {
-  ships: Ships[];
+  ships: Ships;
   currentPlayerIndex: number;
 }
 
@@ -64,3 +64,12 @@ export type ResponseDataPropTypes =
 | IAttackData
 | ITurnData
 | IFinishData
+
+
+export interface IDeckState extends Position {
+  shipDeckState: StateOfShipDeck;
+}
+export interface IShipStateData {
+  shipState: StateOfWholeShip;
+  deckState: IDeckState[];
+}
