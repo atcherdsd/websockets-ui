@@ -16,7 +16,8 @@ import {
   addUserToRoom, 
   createRoom, 
   getRoomsForUser, 
-  handleAttack
+  handleAttack,
+  handleDisconnection
 } from "../room/room.service";
 import { 
   AttackDataProp, 
@@ -151,3 +152,39 @@ function broadcastData(
     client.send(dataToSend);
   });
 }
+
+export const disconnectSocket = (
+  socket: WebSocket,
+  wsServer: WebSocket.Server<typeof WebSocket, typeof IncomingMessage>
+) => {
+  const { name, index } = socket as IAuthSocket;
+
+  if (index === undefined) {
+    console.log('Connection with player is closed!');
+  } else {
+    console.log(`Connection with player ${name} is closed!`);
+    const { 
+      hasUpdateRooms, 
+      hasUpdateWinners, 
+      winner 
+    } = handleDisconnection(index);
+
+    if (hasUpdateRooms) {
+      const roomsForUpdate = getRoomsForUser();
+      const formattedHasUpdateRoomsResponseData
+        = getFormattedData(Types.UpdateRoom, roomsForUpdate);
+      console.log(`Response about rooms for all: ${formattedHasUpdateRoomsResponseData}`);
+      broadcastData(formattedHasUpdateRoomsResponseData, wsServer);
+    }
+
+    if (hasUpdateWinners) {
+      winner !== undefined ? writeWinner(winner) : null;
+
+      const winners = getWinners();
+      const formattedHasUpdateWinnersResponseData
+        = getFormattedData(Types.UpdateWinners, winners);
+      console.log(`Response about winners for all: ${formattedHasUpdateWinnersResponseData}`);
+      broadcastData(formattedHasUpdateWinnersResponseData, wsServer);
+    }
+  }
+};

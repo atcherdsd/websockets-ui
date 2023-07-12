@@ -1,6 +1,16 @@
 import { AttackStatus, StateOfShipDeck, StateOfWholeShip, Types } from "../types/enums";
 import { Position, Ships } from "../types/interfacesIn";
-import { IAttackDataOut, IAuthSocket, ICreateGameData, IFinishData, IGameRoom, IShipStateData, IStartGameData, ITurnData, User } from "../types/interfacesOut";
+import { 
+  IAttackDataOut, 
+  IAuthSocket, 
+  ICreateGameData, 
+  IFinishData, 
+  IGameRoom, 
+  IShipStateData, 
+  IStartGameData, 
+  ITurnData, 
+  User 
+} from "../types/interfacesOut";
 import { getFormattedData, getRandomCoordinates } from "../utils";
 
 const userSockets: IAuthSocket[] = [];
@@ -10,6 +20,8 @@ let game = {} as ICreateGameData;
 
 const shipsToSet = new Map<number, Ships>();
 let currentPlayer: number;
+
+let isStartedGame = false;
 
 const shipsStateDataCollection = new Map<number, IShipStateData[]>;
 
@@ -53,9 +65,8 @@ export const addUserToRoom = (
   socket: IAuthSocket, 
   indexRoom: number 
   ) => {
-  const socketOwnRoom = rooms
-    .find(room => room.roomUsers
-      .find(roomUser => roomUser.index === socket.index));
+  const socketOwnRoom = getRoomBySocketIndex(socket.index);
+  
   if (socketOwnRoom) {
     if (socketOwnRoom.roomId === indexRoom) {
       console.log('Info: Unable to add a player to his own room');
@@ -78,7 +89,13 @@ export const addUserToRoom = (
   return requestedRoom;
 };
 
-function removeRoom(id: number) {
+export function getRoomBySocketIndex(id: number) {
+  const room = rooms
+    .find(room => room.roomUsers
+      .find(roomUser => roomUser.index === id));
+  return room || null;
+}
+export function removeRoom(id: number) {
   rooms = rooms.filter((room) => room.roomId !== id);
 }
 
@@ -105,7 +122,6 @@ function getNewGame(indexRoom: number, userId: number) {
 }
 
 export const addShipsToCreatedGame = (
-  // gameId: number,
   indexPlayer: number, 
   ships: Ships
 ) => {
@@ -135,6 +151,8 @@ export const addShipsToCreatedGame = (
 }
 
 function startGame() {
+  isStartedGame = true;
+
   shipsToSet.forEach((ships, indexPlayer) => {
     const shipsStateData: IShipStateData[] = [];
 
@@ -227,7 +245,7 @@ export const handleAttack = (
   return isFinishedGame;
 }
 
-function getAnotherPlayerIndex(currentIndexPlayer: number) {
+export function getAnotherPlayerIndex(currentIndexPlayer: number) {
   return roomUsers
     .find(({ index }) => index !== currentIndexPlayer)?.index as number;
 }
@@ -297,4 +315,51 @@ function checkGameFinish(anotherPlayerIndex: number): boolean {
     shipsStateDataCollection.get(anotherPlayerIndex) as IShipStateData[];
   return alienShipsStateData
     .every(({ shipState }) => shipState === StateOfWholeShip.Destroyed);
+}
+
+export const handleDisconnection = (index: number) => {
+  let hasUpdateRooms = false;
+  let hasUpdateWinners = false;
+
+  const room = getRoomBySocketIndex(index);
+  if (!room) {
+    return { hasUpdateRooms, hasUpdateWinners };
+  }
+  hasUpdateRooms = true;
+
+  if (!room.game) {
+    return { hasUpdateRooms, hasUpdateWinners };
+  }
+
+  hasUpdateWinners = true;
+
+  const winner = finishGameEarly(index);
+  removeRoom(room.roomId);
+  return { hasUpdateRooms, hasUpdateWinners, winner };
+};
+
+function finishGameEarly(loserId: number) {
+  const winnerId = getAnotherPlayerIndex(loserId);
+  const winnerSocket = userSockets
+    .find(({ index }) => index === winnerId) as IAuthSocket;
+
+  if (!isStartedGame) {
+    const startGameData: IStartGameData = {
+      ships: shipsToSet.get(winnerId) as Ships,
+      currentPlayerIndex: winnerId,      
+    };
+    const formattedStartGameResponseData = 
+      getFormattedData(Types.StartGame, startGameData);
+    console.log(
+      `Response for the game room about game: ${formattedStartGameResponseData}`
+    );
+    winnerSocket.send(formattedStartGameResponseData);
+  }
+
+  const formattedFinishGameEarlyResponseData = 
+    getFormattedData(Types.Finish, { winPlayer: winnerId } as IFinishData);
+  console.log(`Responded personally: ${formattedFinishGameEarlyResponseData}`);
+  winnerSocket.send(formattedFinishGameEarlyResponseData);
+
+  return winnerId;
 }

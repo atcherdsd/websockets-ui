@@ -1,5 +1,5 @@
 import WebSocket, { WebSocketServer } from 'ws';
-import { handleData } from '../controller';
+import { disconnectSocket, handleData } from '../controller';
 
 const port = 3000;
 
@@ -20,8 +20,6 @@ wsServer.on('connection', (socket: WebSocket) => {
   });
 
   socket.on('close', () => {
-    console.log(
-      `Connection with player has been closed!`
-    );
+    disconnectSocket(socket, wsServer);
   })
 });
