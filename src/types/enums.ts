@@ -33,5 +33,5 @@ export enum StateOfWholeShip {
 }
 export enum StateOfShipDeck {
   Unharmed = 'unharmed',
-  Destroyed = 'destroyed',
+  Wounded = 'wounded',
 }

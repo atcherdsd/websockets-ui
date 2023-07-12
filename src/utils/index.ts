@@ -1,5 +1,5 @@
 import { Types } from "../types/enums";
-import { RequestDataTypes } from "../types/interfacesIn";
+import { Position, RequestDataTypes } from "../types/interfacesIn";
 import { ResponseDataPropTypes } from "../types/interfacesOut";
 
 export const parseRawData = (rawData: string): RequestDataTypes | null => {
@@ -23,4 +23,11 @@ export const getFormattedData = (
     data: JSON.stringify(data),
     id: 0,
   });
+};
+
+export const getRandomCoordinates = (): Position => {
+  return {
+    x: Math.floor(Math.random() * 10),
+    y: Math.floor(Math.random() * 10),
+  }
 };

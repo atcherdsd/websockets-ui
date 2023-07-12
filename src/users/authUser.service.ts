@@ -1,8 +1,13 @@
 import WebSocket from "ws";
-import { IAuthSocket, IUserData, IUserRegisterData, WinnerData } from "../types/interfacesOut";
+import { 
+  IAuthSocket, 
+  IUserData, 
+  IUserRegisterData, 
+  WinnerData 
+} from "../types/interfacesOut";
 
 const users: IUserData[] = [];
-const winners: WinnerData[] = [];
+let winners: WinnerData[] = [];
 
 export const authenticateUser = (
   name: string, 
@@ -55,4 +60,16 @@ export const authenticateUser = (
 
 export const getWinners = ():WinnerData[] => {
   return winners;
+};
+
+
+export const writeWinner = (indexPlayer: number): void => {
+  const winner = users
+    .find(({ index }) => index === indexPlayer) as IUserData;
+  
+  winners = winners
+    .map(( { name, wins }) => (
+      name === winner.name ? {name, wins: wins + 1} : { name, wins})
+    )
+    .sort((a, b) => b.wins - a.wins) as WinnerData[];
 };

@@ -6,11 +6,25 @@ import {
   Room, 
   UpdateRoomData, 
   UpdateWinnersData, 
-  WinnerData } from "../types/interfacesOut";
-import { authenticateUser, getWinners } from "../users/authUser.service";
+  WinnerData 
+} from "../types/interfacesOut";
+import { authenticateUser, getWinners, writeWinner } from "../users/authUser.service";
 import { getFormattedData, parseRawData } from "../utils";
 import { IncomingMessage } from "http";
-import { addShipsToCreatedGame, addUserToRoom, createRoom, getRoomsForUser } from "../room/room.service";
+import { 
+  addShipsToCreatedGame, 
+  addUserToRoom, 
+  createRoom, 
+  getRoomsForUser, 
+  handleAttack
+} from "../room/room.service";
+import { 
+  AttackDataProp, 
+  IAttackData, 
+  IRandomAttackData, 
+  Position, 
+  RandomAttackDataProp 
+} from "../types/interfacesIn";
 
 export const handleData = (
   socket: WebSocket, 
@@ -96,6 +110,28 @@ export const handleData = (
 
         addShipsToCreatedGame(indexPlayer, ships);
 
+        break;
+      }
+      case Types.Attack:
+      case Types.RandomAttack: {
+        const { data } = parsedData as IAttackData | IRandomAttackData;
+        const { x, y } = data as Position;
+        const { gameId, indexPlayer } = data as AttackDataProp | RandomAttackDataProp;
+                
+        const coordinatesExist = (x !== undefined && y !== undefined);
+        const attackCoordinates = coordinatesExist ? { x, y} : null;
+
+        const isGameOver = handleAttack(indexPlayer, attackCoordinates, gameId);
+
+        if (isGameOver) {
+          writeWinner(indexPlayer);
+
+          const winners: WinnerData[] = getWinners();
+          const formattedWinnersResponseData:string = 
+            getFormattedData(Types.UpdateWinners, winners as UpdateWinnersData);
+          console.log(`Response about winners for all: ${formattedWinnersResponseData}`);
+          broadcastData(formattedWinnersResponseData, wsServer);
+        }
         break;
       }
       default:

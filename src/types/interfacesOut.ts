@@ -36,12 +36,16 @@ export interface Room {
 }
 export type UpdateRoomData = Room[]
 
+export interface IGameRoom extends Room {
+  game: ICreateGameData
+}
+
 export interface IStartGameData {
   ships: Ships;
   currentPlayerIndex: number;
 }
 
-export interface IAttackData {
+export interface IAttackDataOut {
   position: Position;
   currentPlayer: number;
   status: AttackStatus;
@@ -61,7 +65,7 @@ export type ResponseDataPropTypes =
 | UpdateRoomData
 | ICreateGameData
 | IStartGameData
-| IAttackData
+| IAttackDataOut
 | ITurnData
 | IFinishData
 
