@@ -62,7 +62,7 @@ export const handleData = (
         const formattedRoomResponseData:string = 
           getFormattedData(Types.UpdateRoom, roomsForUser as UpdateRoomData);
         console.log(`Response about rooms for all: ${formattedRoomResponseData}`);
-        socket.send(formattedRoomResponseData);
+        broadcastData(formattedRoomResponseData, wsServer);
 
         const winners: WinnerData[] = getWinners();
         const formattedWinnersResponseData:string = 
